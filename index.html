@@ -27,10 +27,6 @@ function preload() {
 var sprite;
 var cursors;
 
-var bullet;
-var bullets;
-var bulletTime = 0;
-
 function create() {
 
     //  This will run in Canvas mode, so let's gain a little speed and display
@@ -38,20 +34,11 @@ function create() {
     game.renderer.roundPixels = true;
 
     //  We need arcade physics
-    game.physics.startSystem(Phaser.Physics.ARCADE);
+    //game.physics.startSystem(Phaser.Physics.ARCADE);
 
     //  A spacey background
     game.add.tileSprite(0, 0, game.width, game.height, 'space');
 
-    //  Our ships bullets
-    bullets = game.add.group();
-    bullets.enableBody = true;
-    bullets.physicsBodyType = Phaser.Physics.ARCADE;
-
-    //  All 40 of them
-    bullets.createMultiple(40, 'bullet');
-    bullets.setAll('anchor.x', 0.5);
-    bullets.setAll('anchor.y', 0.5);
 
     //  Our player ship
     sprite = game.add.sprite(300, 300, 'ship');
@@ -60,7 +47,7 @@ function create() {
     //  and its physics settings
     game.physics.enable(sprite, Phaser.Physics.ARCADE);
 
-    sprite.body.drag.set(100);
+    //sprite.body.drag.set(100);
     sprite.body.maxVelocity.set(200);
 
     //  Game input
@@ -73,53 +60,24 @@ function update() {
 
     if (cursors.up.isDown)
     {
-        game.physics.arcade.accelerationFromRotation(sprite.rotation, 200, sprite.body.acceleration);
+        sprite.body.y -= 3;
     }
-    else
+    if (cursors.down.isDown)
     {
-        sprite.body.acceleration.set(0);
+        sprite.body.y += 3;
     }
 
     if (cursors.left.isDown)
     {
-        sprite.body.angularVelocity = -300;
+        sprite.body.x -= 3;
     }
-    else if (cursors.right.isDown)
+    
+    if (cursors.right.isDown)
     {
-        sprite.body.angularVelocity = 300;
-    }
-    else
-    {
-        sprite.body.angularVelocity = 0;
-    }
-
-    if (game.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR))
-    {
-        fireBullet();
+        sprite.body.x += 3;
     }
 
     screenWrap(sprite);
-
-    bullets.forEachExists(screenWrap, this);
-
-}
-
-function fireBullet () {
-
-    if (game.time.now > bulletTime)
-    {
-        bullet = bullets.getFirstExists(false);
-
-        if (bullet)
-        {
-            bullet.reset(sprite.body.x + 16, sprite.body.y + 16);
-            bullet.lifespan = 2000;
-            bullet.rotation = sprite.rotation;
-            game.physics.arcade.velocityFromRotation(sprite.rotation, 400, bullet.body.velocity);
-            bulletTime = game.time.now + 50;
-        }
-    }
-
 }
 
 function screenWrap (sprite) {
