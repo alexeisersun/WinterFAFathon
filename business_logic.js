@@ -28,6 +28,9 @@ var gameLost = false;
 var completedPath = true;
 var currentSpeed = 0;
 
+var player_icon;
+var enemy_icon;
+var teacher_icon;
 var enemyX = 0;
 var enemyY = 0;
 
@@ -41,15 +44,17 @@ function displaySplashScreen() {
 }
 function preload() {
     game.load.script('webfont', '//ajax.googleapis.com/ajax/libs/webfont/1.4.7/webfont.js');
-    //displaySplashScreen();
     game.load.image('background', 'pic/background.jpg');
     game.load.spritesheet('player', 'pic/dude.png', 32, 48);
     game.load.spritesheet('enemy', 'pic/enemy.png', 32, 48);
     game.load.spritesheet('teacher', 'pic/teacher.png', 32, 48);
+    game.load.image('player_icon', 'pic/dude_small.png');
+    game.load.image('enemy_icon', 'pic/enemy_small.png');
+    game.load.image('teacher_icon', 'pic/teacher_small.png');
 }
 
 function playerSetup(player, game) {
-    player = game.add.sprite(32, 60, 'player');
+    player = game.add.sprite(game.world.centerX, game.world.centerY, 'player');
     player.anchor.set(0.5);
 
     //  and its physics settings
@@ -64,7 +69,7 @@ function playerSetup(player, game) {
 }
 
 function enemySetup(enemy, game) {
-    enemy = game.add.sprite(100, 100, 'enemy');
+    enemy = game.add.sprite(50 + Math.random() * (game.world.height - 100), 50 + Math.random() * (game.world.width - 100), 'enemy');
     enemy.anchor.set(0.5);
 
     game.physics.enable(enemy, Phaser.Physics.ARCADE);
@@ -93,10 +98,14 @@ function create() {
 }
 
 function loadMenu() {
-    gameBeginText = game.add.text(game.world.centerX, game.world.centerY, "Press \"Space\" to start\nArrows for movement\nSpace for copying\nthe laboratory work", { font: "65px Arial", fill: "#151515", align: "center" });
+    gameBeginText = game.add.text(game.world.centerX, game.world.centerY, "<--You\n<--Your best friend\n<--Your teacher (avoid him)\nArrows for movement\nHold Space to copy the lab work\nPress \"Space\" to start lab", { font: "65px Arial", fill: "#151515", align: "center" });
     gameBeginText.anchor.setTo(0.5, 0.5);
     gameBeginText.font = 'Shadows Into Light Two';
-    gameBeginText.fontSize = 55;
+    gameBeginText.fontSize = 45;
+
+    player_icon = game.add.sprite(100, 140, 'player_icon');
+    enemy_icon = game.add.sprite(100, 190, 'enemy_icon');
+    teacher_icon = game.add.sprite(100, 245, 'teacher_icon');
     score = 0;
 }
 
@@ -137,6 +146,9 @@ function startGame() {
     var spaceKeyStart = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
     if(spaceKeyStart.downDuration(0.1)){
         gameBeginText.destroy();
+        player_icon.kill();
+        teacher_icon.kill();
+        enemy_icon.kill();
         justStarted = false;
         isPlaying = true;
         loadGame();
@@ -147,8 +159,8 @@ function play() {
     player.animations.stop();
     player.body.velocity.x = 0;
     movePlayer(player, cursors);
-
     if(spaceKey.isDown && areNearby(player, enemy, 1000)) {
+
         score += 0.05;
         scoreText.text = 'Lab done: ' + Math.round(score * 10) / 10 +"%";
     }
@@ -172,7 +184,25 @@ function play() {
 }
 
 function gameWin(player, teacher, enemy) {
-    // body...
+ if(isPlaying){
+        player.kill();
+        teacher.kill();
+        enemy.kill();
+        scoreText.destroy();
+        gameOverText = game.add.text(game.world.centerX, game.world.centerY, "Congratulation!\nYou have reached IT.\nPress \"Space\" to start again", { font: "65px Arial", fill: "#151515", align: "center" });
+        gameOverText.anchor.setTo(0.5, 0.5);
+        gameOverText.font = 'Shadows Into Light Two';
+        gameOverText.fontSize = 35;
+    }
+
+    isPlaying = false;
+    var spaceKeyRestart = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
+    if(spaceKeyRestart.downDuration(0.1)){
+        gameLost = false;
+        isPlaying = true;
+
+        loadGame();
+    }
 }
 
 function movePlayer(player, cursors) {
