@@ -1,5 +1,21 @@
 var game = new Phaser.Game(800, 600, Phaser.CANVAS, 'phaser-example', { preload: preload, create: create, update: update, render: render });
 
+
+
+var WebFontConfig = {
+
+    //  'active' means all requested fonts have finished loading
+    //  We set a 1 second delay before calling 'createText'.
+    //  For some reason if we don't the browser cannot render the text the first time it's created.
+    active: function() { game.time.events.add(Phaser.Timer.SECOND, displaySplashScreen,  this); },
+
+    //  The Google Fonts we want to load (specify as many as you like in the array)
+    google: {
+      families: [ 'Shadows Into Light Two']
+    
+    }};
+
+
 var enemy;
 var player;
 var cursors;
@@ -14,9 +30,18 @@ var currentSpeed = 0;
 
 var enemyX = 0;
 var enemyY = 0;
-function preload() {
-    gameOverText = game.add.text(game.world.centerX, game.world.centerY, "Loading HackLabs...", { font: "65px Segoe UI Light", fill: "#151515", align: "center" });
+
+function displaySplashScreen() {
+
+    gameOverText = game.add.text(game.world.centerX, game.world.centerY, "", { font: "Coming Soon", fill: "#151515", align: "center" });
     gameOverText.anchor.setTo(0.5, 0.5);
+    gameOverText.font = 'Shadows Into Light Two';
+    gameOverText.text = 'Loading HackLabs...'
+    gameOverText.fontSize = 55;
+}
+function preload() {
+    game.load.script('webfont', '//ajax.googleapis.com/ajax/libs/webfont/1.4.7/webfont.js');
+    //displaySplashScreen();
     game.load.image('background', 'pic/background.jpg');
     game.load.spritesheet('player', 'pic/dude.png', 32, 48);
     game.load.spritesheet('enemy', 'pic/enemy.png', 32, 48);
@@ -68,8 +93,10 @@ function create() {
 }
 
 function loadMenu() {
-    gameBeginText = game.add.text(game.world.centerX, game.world.centerY, "Press \"Space\" to start", { font: "65px Arial", fill: "#151515", align: "center" });
+    gameBeginText = game.add.text(game.world.centerX, game.world.centerY, "Press \"Space\" to start\nArrows for movement\nSpace for copying\nthe laboratory work", { font: "65px Arial", fill: "#151515", align: "center" });
     gameBeginText.anchor.setTo(0.5, 0.5);
+    gameBeginText.font = 'Shadows Into Light Two';
+    gameBeginText.fontSize = 55;
     score = 0;
 }
 
@@ -87,7 +114,9 @@ function loadGame(){
     spaceKey = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
     game.input.keyboard.addKeyCapture([ Phaser.Keyboard.SPACEBAR ]);
 
-    scoreText = game.add.text(16, 16, 'Lab done: ' + score.toString(), {  fontSize: '32px', fill: '#000' });
+    scoreText = game.add.text(16, 16, 'Lab done: ' + score.toString()+"%", {  fontSize: '32px', fill: '#000' });
+    scoreText.font = 'Shadows Into Light Two';
+    scoreText.fontSize = 35;
 }
 
 function update() {
@@ -121,12 +150,12 @@ function play() {
 
     if(spaceKey.isDown && areNearby(player, enemy, 1000)) {
         score += 0.05;
-        scoreText.text = 'Lab done: ' + Math.round(score * 100) / 100 ;
+        scoreText.text = 'Lab done: ' + Math.round(score * 10) / 10 +"%";
     }
 
     if(Math.pow((player.body.x - teacher.body.x), 2) + Math.pow((player.body.y - teacher.body.y), 2) < 1000){
         score -= 0.15;
-        scoreText.text = 'Lab done: ' + Math.round(score * 100) / 100 ;
+        scoreText.text = 'Lab done: ' + Math.round(score * 10) / 10 +"%";
     }
     
     if (score > 100){
@@ -183,6 +212,8 @@ function gameOver(player, teacher, enemy) {
         scoreText.destroy();
         gameOverText = game.add.text(game.world.centerX, game.world.centerY, "You haven't reached IT\nPress \"Space\" to restart", { font: "65px Arial", fill: "#151515", align: "center" });
         gameOverText.anchor.setTo(0.5, 0.5);
+        gameOverText.font = 'Shadows Into Light Two';
+        gameOverText.fontSize = 35;
     }
 
     isPlaying = false;
@@ -220,7 +251,7 @@ function areNearby(player, enemy, distance){
 }
 
 function moveEnemy(enemy){
-
+/*
     if(!completedPath){
         enemy.body.velocity.setTo(enemyX, enemyY);
         if (enemy.body.x == enemyX && enemy.body.y == enemyY){
@@ -230,10 +261,10 @@ function moveEnemy(enemy){
         enemyX = 50 + Math.random() * 700;
         enemyy = 50 + Math.random() * 500;
         completedPath = false;
-    }
+    }*/
     
-    /*enemy.body.x += 7 - Math.random() * 14;
-    enemy.body.y += 7 - Math.random() * 14;*/
+    enemy.body.x += 7 - Math.random() * 14;
+    enemy.body.y += 7 - Math.random() * 14;
 }
 
 function screenWrap (player) {
