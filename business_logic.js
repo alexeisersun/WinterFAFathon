@@ -6,15 +6,17 @@ var cursors;
 var guards;
 var spaceKey;
 var teacher;
-var isPlaying = true;
-function preload() {
+var isPlaying = false;
+var justStarted = true;
+var gameLost = false;
 
+function preload() {
+    gameOverText = game.add.text(game.world.centerX, game.world.centerY, "Loading HackLabs...", { font: "65px Segoe UI Light", fill: "#151515", align: "center" });
+    gameOverText.anchor.setTo(0.5, 0.5);
     game.load.image('background', 'pic/background.jpg');
     game.load.spritesheet('player', 'pic/dude.png', 32, 48);
     game.load.spritesheet('enemy', 'pic/enemy.png', 32, 48);
     game.load.spritesheet('teacher', 'pic/teacher.png', 32, 48);
-    gameOverText = game.add.text(game.world.centerX, game.world.centerY, "Loading...", { font: "65px Arial", fill: "#151515", align: "center" });
-    gameOverText.anchor.setTo(0.5, 0.5);
 }
 
 function playerSetup(player, game) {
@@ -57,11 +59,20 @@ function teacherSetup(teacher, game) {
 }
 
 function create() {
+    gameOverText.destroy();
+    loadMenu();
+}
 
+function loadMenu() {
+    gameBeginText = game.add.text(game.world.centerX, game.world.centerY, "Press \"Space\" to start", { font: "65px Arial", fill: "#151515", align: "center" });
+    gameBeginText.anchor.setTo(0.5, 0.5);
+    score = 0;
+}
 
+function loadGame(){
+    score = 0;
     game.renderer.clearBeforeRender = false;
     game.renderer.roundPixels = true;
-
     game.add.tileSprite(0, 0, game.width, game.height, 'background');
 
     player = playerSetup(player, game);
@@ -72,36 +83,59 @@ function create() {
     spaceKey = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
     game.input.keyboard.addKeyCapture([ Phaser.Keyboard.SPACEBAR ]);
 
-    score = 0;
     scoreText = game.add.text(16, 16, 'Lab done: ' + score.toString(), {  fontSize: '32px', fill: '#000' });
 }
 
 function update() {
+    if(justStarted){
+        startGame();
+    }
+
     if(isPlaying){
-        player.animations.stop();
-        player.body.velocity.x = 0;
-
-        movePlayer(player, cursors);
-        
-        if(spaceKey.isDown && areNearby(player, enemy, 1000)) {
-            score += 0.05;
-            scoreText.text = 'Lab done: ' + Math.round(score * 100) / 100 ;
-        }
-
-        if(Math.pow((player.body.x - teacher.body.x), 2) + Math.pow((player.body.y - teacher.body.y), 2) < 1000){
-            score -= 0.15;
-            scoreText.text = 'Lab done: ' + Math.round(score * 100) / 100 ;
-        }
-        if (score > 0){
-            gameWin(player, teacher, enemy);
-        }
-        screenWrap(player);
-        moveEnemy(enemy);
-        moveTeacher(teacher, player);    
+        play();
     }
-    if (score < 0){
-            gameOver(player, teacher, enemy);
+
+    if (gameLost){
+        gameOver(player, teacher, enemy);
     }
+}
+
+function startGame() {
+    var spaceKeyStart = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
+    if(spaceKeyStart.downDuration(0.1)){
+        gameBeginText.destroy();
+        justStarted = false;
+        isPlaying = true;
+        loadGame();
+    }
+}
+
+function play() {
+    player.animations.stop();
+    player.body.velocity.x = 0;
+    movePlayer(player, cursors);
+
+    if(spaceKey.isDown && areNearby(player, enemy, 1000)) {
+        score += 0.05;
+        scoreText.text = 'Lab done: ' + Math.round(score * 100) / 100 ;
+    }
+
+    if(Math.pow((player.body.x - teacher.body.x), 2) + Math.pow((player.body.y - teacher.body.y), 2) < 1000){
+        score -= 0.15;
+        scoreText.text = 'Lab done: ' + Math.round(score * 100) / 100 ;
+    }
+    
+    if (score > 100){
+        gameWin(player, teacher, enemy);
+    }
+
+    if(score < 0){
+        gameLost = true;
+    }
+    
+    screenWrap(player);
+    moveEnemy(enemy);
+    moveTeacher(teacher, player);    
 }
 
 function gameWin(player, teacher, enemy) {
@@ -143,15 +177,17 @@ function gameOver(player, teacher, enemy) {
         teacher.kill();
         enemy.kill();
         scoreText.destroy();
-        gameOverText = game.add.text(game.world.centerX, game.world.centerY, "Game Over!\nTotal score:" + score.toString() + "\nPress \"Space\" to restart", { font: "65px Arial", fill: "#151515", align: "center" });
+        gameOverText = game.add.text(game.world.centerX, game.world.centerY, "Game Over!\nPress \"Space\" to restart", { font: "65px Arial", fill: "#151515", align: "center" });
         gameOverText.anchor.setTo(0.5, 0.5);
     }
 
     isPlaying = false;
     var spaceKeyRestart = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
     if(spaceKeyRestart.downDuration(0.1)){
+        gameLost = false;
         isPlaying = true;
-        create();
+
+        loadGame();
     }
 }
 
