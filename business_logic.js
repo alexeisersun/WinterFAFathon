@@ -9,7 +9,11 @@ var teacher;
 var isPlaying = false;
 var justStarted = true;
 var gameLost = false;
+var completedPath = true;
+var currentSpeed = 0;
 
+var enemyX = 0;
+var enemyY = 0;
 function preload() {
     gameOverText = game.add.text(game.world.centerX, game.world.centerY, "Loading HackLabs...", { font: "65px Segoe UI Light", fill: "#151515", align: "center" });
     gameOverText.anchor.setTo(0.5, 0.5);
@@ -177,7 +181,7 @@ function gameOver(player, teacher, enemy) {
         teacher.kill();
         enemy.kill();
         scoreText.destroy();
-        gameOverText = game.add.text(game.world.centerX, game.world.centerY, "Game Over!\nPress \"Space\" to restart", { font: "65px Arial", fill: "#151515", align: "center" });
+        gameOverText = game.add.text(game.world.centerX, game.world.centerY, "You haven't reached IT\nPress \"Space\" to restart", { font: "65px Arial", fill: "#151515", align: "center" });
         gameOverText.anchor.setTo(0.5, 0.5);
     }
 
@@ -216,8 +220,20 @@ function areNearby(player, enemy, distance){
 }
 
 function moveEnemy(enemy){
-    enemy.body.x += 7 - Math.random() * 14;
-    enemy.body.y += 7 - Math.random() * 14;
+
+    if(!completedPath){
+        enemy.body.velocity.setTo(enemyX, enemyY);
+        if (enemy.body.x == enemyX && enemy.body.y == enemyY){
+            completedPath = true;
+        }
+    }else{
+        enemyX = 50 + Math.random() * 700;
+        enemyy = 50 + Math.random() * 500;
+        completedPath = false;
+    }
+    
+    /*enemy.body.x += 7 - Math.random() * 14;
+    enemy.body.y += 7 - Math.random() * 14;*/
 }
 
 function screenWrap (player) {
