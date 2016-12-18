@@ -6,27 +6,18 @@ var cursors;
 var guards;
 var spaceKey;
 var teacher;
-
+var isPlaying = true;
 function preload() {
+
     game.load.image('background', 'pic/background.jpg');
     game.load.spritesheet('player', 'pic/dude.png', 32, 48);
     game.load.spritesheet('enemy', 'pic/enemy.png', 32, 48);
     game.load.spritesheet('teacher', 'pic/teacher.png', 32, 48);
+    gameOverText = game.add.text(game.world.centerX, game.world.centerY, "Loading...", { font: "65px Arial", fill: "#151515", align: "center" });
+    gameOverText.anchor.setTo(0.5, 0.5);
 }
 
-function create() {
-
-    //  This will run in Canvas mode, so let's gain a little speed and display
-    game.renderer.clearBeforeRender = false;
-    game.renderer.roundPixels = true;
-
-    //  We need arcade physics
-    //game.physics.startSystem(Phaser.Physics.ARCADE);
-
-    //  A spacey background
-    game.add.tileSprite(0, 0, game.width, game.height, 'background');
-
-    //  Our player ship 
+function playerSetup(player, game) {
     player = game.add.sprite(32, 60, 'player');
     player.anchor.set(0.5);
 
@@ -38,8 +29,10 @@ function create() {
     player.body.collideWorldBounds = true;
     player.animations.add('left', [0, 1, 2, 3], 10, true);
     player.animations.add('right', [5, 6, 7, 8], 10, true);
+    return player;
+}
 
-
+function enemySetup(enemy, game) {
     enemy = game.add.sprite(100, 100, 'enemy');
     enemy.anchor.set(0.5);
 
@@ -49,19 +42,32 @@ function create() {
     enemy.body.collideWorldBounds = true;
     enemy.animations.add('left', [0, 1, 2, 3], 10, true);
     enemy.animations.add('right', [5, 6, 7, 8], 10, true);
+    return enemy;
+}
 
-   teacher = game.add.sprite(200, 200, 'teacher');
+function teacherSetup(teacher, game) {
+    teacher = game.add.sprite(200, 200, 'teacher');
     teacher.anchor.set(0.5);
-
     game.physics.enable(teacher, Phaser.Physics.ARCADE);
-
     teacher.body.maxVelocity.set(200);
     teacher.body.collideWorldBounds = true;
     teacher.animations.add('left', [0, 1, 2, 3], 10, true);
     teacher.animations.add('right', [5, 6, 7, 8], 10, true);
+    return teacher;
+}
+
+function create() {
 
 
-    //  Game input
+    game.renderer.clearBeforeRender = false;
+    game.renderer.roundPixels = true;
+
+    game.add.tileSprite(0, 0, game.width, game.height, 'background');
+
+    player = playerSetup(player, game);
+    enemy = enemySetup(enemy, game);
+    teacher = teacherSetup(teacher, game);
+
     cursors = game.input.keyboard.createCursorKeys();
     spaceKey = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
     game.input.keyboard.addKeyCapture([ Phaser.Keyboard.SPACEBAR ]);
@@ -71,9 +77,38 @@ function create() {
 }
 
 function update() {
+    if(isPlaying){
+        player.animations.stop();
+        player.body.velocity.x = 0;
 
-    player.animations.stop();
-    player.body.velocity.x = 0;
+        movePlayer(player, cursors);
+        
+        if(spaceKey.isDown && areNearby(player, enemy, 1000)) {
+            score += 0.05;
+            scoreText.text = 'Lab done: ' + Math.round(score * 100) / 100 ;
+        }
+
+        if(Math.pow((player.body.x - teacher.body.x), 2) + Math.pow((player.body.y - teacher.body.y), 2) < 1000){
+            score -= 0.15;
+            scoreText.text = 'Lab done: ' + Math.round(score * 100) / 100 ;
+        }
+        if (score > 0){
+            gameWin(player, teacher, enemy);
+        }
+        screenWrap(player);
+        moveEnemy(enemy);
+        moveTeacher(teacher, player);    
+    }
+    if (score < 0){
+            gameOver(player, teacher, enemy);
+    }
+}
+
+function gameWin(player, teacher, enemy) {
+    // body...
+}
+
+function movePlayer(player, cursors) {
     if (cursors.up.isDown)
     {
         player.body.y -= 4;
@@ -99,35 +134,31 @@ function update() {
         player.animations.stop();
         player.frame = 4;
     }
-
-    if(spaceKey.isDown && areNearby(player, enemy)) {
-        score += 0.05;
-        scoreText.text = 'Lab done: ' + Math.round(score * 100) / 100 ;
-    }
-
-    if(Math.pow((player.body.x - teacher.body.x), 2) + Math.pow((player.body.y - teacher.body.y), 2) < 1000){
-        score -= 0.15;
-        scoreText.text = 'Lab done: ' + Math.round(score * 100) / 100 ;
-    }
-    if (score < 0){
-        gameOver(player, teacher, enemy);
-    }
-    screenWrap(player);
-    moveEnemy(enemy);
-    moveTeacher(teacher, player);
+    return player;
 }
 
-
 function gameOver(player, teacher, enemy) {
-    player.kill();
-    teacher.kill();
-    enemy.kill();
-    scoreText.text = 'Game Over!';
-    if(spaceKey.downDuration(50)){
+    if(isPlaying){
+        player.kill();
+        teacher.kill();
+        enemy.kill();
+        scoreText.destroy();
+        gameOverText = game.add.text(game.world.centerX, game.world.centerY, "Game Over!\nTotal score:" + score.toString() + "\nPress \"Space\" to restart", { font: "65px Arial", fill: "#151515", align: "center" });
+        gameOverText.anchor.setTo(0.5, 0.5);
+    }
+
+    isPlaying = false;
+    var spaceKeyRestart = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
+    if(spaceKeyRestart.downDuration(0.1)){
+        isPlaying = true;
         create();
     }
 }
 
+function removeText() {
+    gameOverText.destroy();
+}
+ 
 function moveTeacher(teacher, player) {
     if(player.body.x > teacher.body.x){
         teacher.body.x += 1;
@@ -144,8 +175,8 @@ function moveTeacher(teacher, player) {
     }
 }
 
-function areNearby(player, enemy){
-    return Math.pow((player.body.x - enemy.body.x), 2) + Math.pow((player.body.y - enemy.body.y), 2) < 1000
+function areNearby(player, enemy, distance){
+    return Math.pow((player.body.x - enemy.body.x), 2) + Math.pow((player.body.y - enemy.body.y), 2) < distance;
 }
 
 function moveEnemy(enemy){
@@ -173,7 +204,6 @@ function screenWrap (player) {
     {
         player.y = 0;
     }
-
 }
 
 function render() {
