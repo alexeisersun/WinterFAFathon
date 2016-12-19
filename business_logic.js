@@ -1,7 +1,5 @@
 var game = new Phaser.Game(800, 600, Phaser.CANVAS, 'phaser-example', { preload: preload, create: create, update: update, render: render });
 
-
-
 var WebFontConfig = {
 
     //  'active' means all requested fonts have finished loading
@@ -33,7 +31,7 @@ var enemy_icon;
 var teacher_icon;
 var enemyX = 0;
 var enemyY = 0;
-
+var gameOverText;
 function displaySplashScreen() {
 
     gameOverText = game.add.text(game.world.centerX, game.world.centerY, "", { font: "Coming Soon", fill: "#151515", align: "center" });
@@ -93,7 +91,8 @@ function teacherSetup(teacher, game) {
 }
 
 function create() {
-    gameOverText.destroy();
+    
+    //gameOverText.destroy();
     loadMenu();
 }
 
@@ -179,6 +178,7 @@ function play() {
     }
     
     screenWrap(player);
+    
     moveEnemy(enemy);
     moveTeacher(teacher, player);    
 }
